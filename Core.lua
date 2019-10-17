@@ -37,10 +37,19 @@ local function eventHandler(self, event, ...)
     print("Rx: " .. event);
 
     if event == "CHAT_MSG_LOOT" then
-        text, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ = ...
-        loot = (string.match(text, "%[(.-)%]"))
-        AddHolding("loot", loot)
+        text, _, _, _, sender, _, _, _, _, _, _, _, _, _, _, _, _ = ...
+        if sender == UnitName("player") then
+            loot = (string.match(text, "%[(.-)%]"))
+            -- sometimes you get more than one [Great Goretusk Snout]x2 .. want to
+            -- extract that count
+            -- text2 = text .. "x2"
+            -- print("A x2 would have count " .. text2)
+            -- c = string.match(text2, "%].x(.-)"))
+            --print("A x2 would have count " .. count)
+            AddHolding("loot", loot)
+        end
     end
+    -- DELETE_ITEM_CONFIRM seems to be fired when you choose to destroy an item
 
 end
 
@@ -85,7 +94,7 @@ end
 function ShowHoldings()
     print("HOLDINGS")
     for i in pairs(holdings) do
-		print("Holding: " .. i .. " " .. holdings[i]);
+		print(i .. " " .. holdings[i]);
 	end
 	print("Cash: " .. GetMoney())
 end
