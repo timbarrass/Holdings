@@ -1,0 +1,12 @@
+## Interface: 40200
+## Version: 0.1
+## Title: Holdings
+## Author: Tim Barrass
+## Notes: Keeps track of your holdings and transactions
+## SavedVariables: HoldingsDB
+## OptionalDeps: Ace3
+## X-Embeds: Ace3
+
+embeds.xml
+
+Core.lua
