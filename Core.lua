@@ -17,10 +17,7 @@ end
 function Holdings:OnEnable()
     -- Called when the addon is enabled
 
-    frame:RegisterEvent("LOOT_OPENED")
-    frame:RegisterEvent("ITEM_PUSH")
-    frame:RegisterEvent("LOOT_CLOSED")
-    frame:RegisterEvent("PLAYER_MONEY");
+    frame:RegisterEvent("CHAT_MSG_LOOT")
 
     self:Print("Holdings enabled.");
 
@@ -39,8 +36,10 @@ local function eventHandler(self, event, ...)
     
     print("Rx: " .. event);
 
-    if event == "LOOT_OPENED" then
-        context = "LOOT"
+    if event == "CHAT_MSG_LOOT" then
+        text, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ = ...
+        loot = (string.match(text, "%[(.-)%]"))
+        AddHolding("loot", loot)
     end
 
 end
@@ -51,18 +50,13 @@ frame:SetScript("OnEvent", eventHandler);
 -- Utility functions
 -- ---------------------------------------------------------------------------------------
 
-function UpdateHoldings()
-	print("Handling holdings change");
-	local newHoldings = holdings();
-	for i in pairs(newHoldings) do
-		if (holdings[i]) then
-			if (holdings[i] == newHoldings[i]) then
-			else
-				print("Delta: "..i.." "..holdings[i].." > "..newHoldings[i]);
-			end
-		end
-	end
-	holdings = newHoldings;
+function AddHolding(context, item)
+    print("Add " .. context .. " " .. item)
+    if holdings[item] then
+        holdings[item] = holdings[item] + 1
+    else
+        holdings[item] = 1
+    end
 end
 
 function BuildHoldings()
@@ -72,13 +66,14 @@ function BuildHoldings()
 		slots = GetContainerNumSlots(i)
 		for j = 1,slots,1
 		do
-			icon, itemCount, locked, quality, readable, lootable, itemLink, isFiltered, noValue, itemID = GetContainerItemInfo(i,j);
+            _, itemCount, _, _, _, _, itemLink, _, _, _ = GetContainerItemInfo(i,j);
+            itemName, _, _, _, _, _, _, _, _, _, _ = GetItemInfo(itemLink)
 			if (itemCount == nil) then
 			else
-				if (newHoldings[itemLink]) then
-					newHoldings[itemLink] = newHoldings[itemLink] + itemCount;
+				if (newHoldings[itemName]) then
+					newHoldings[itemName] = newHoldings[itemName] + itemCount;
 				else
-					newHoldings[itemLink] = itemCount;
+					newHoldings[itemName] = itemCount;
 				end
 			end
 		end
