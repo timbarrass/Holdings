@@ -1,0 +1,6 @@
+Events inconsistent - in some places you get the data you need (itemLink e.g. from Api call)
+but in others you have to parse out a string manually (eg. CHAT_MSG_LOOT). Need to tie info
+across multiple domains/topics (e.g. chat, merchant, cash ...)
+
+No debugging environment, no compiletime checks or real intellisense. Patchy crowdsourced
+documentation and /etrace.
