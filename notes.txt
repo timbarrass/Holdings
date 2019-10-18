@@ -2,5 +2,10 @@ Events inconsistent - in some places you get the data you need (itemLink e.g. fr
 but in others you have to parse out a string manually (eg. CHAT_MSG_LOOT). Need to tie info
 across multiple domains/topics (e.g. chat, merchant, cash ...)
 
+Stringing workflow across events -- see ITEM_LOCKED, DESTROY_ITEM_CONFIRM and BAG_UPDATE requires some
+state management ... inevitably bug-prone if the player can do multiple things at the same
+time.
+
 No debugging environment, no compiletime checks or real intellisense. Patchy crowdsourced
 documentation and /etrace.
+
