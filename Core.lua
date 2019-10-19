@@ -6,7 +6,7 @@ Holdings = LibStub("AceAddon-3.0"):NewAddon("Holdings", "AceConsole-3.0", "AceEv
 local frame = CreateFrame("FRAME", "HoldingsAddonFrame");
 local rememberedBag, rememberedSlot, rememberedName, extendedState
 
-local Loot, Record, RememberItemLocation, RememberItemCount, RememberState
+local Loot, Record, RememberItemLocation, RememberItemCount, RememberState, CountDifference
 
 -- ---------------------------------------------------------------------------------------
 -- Standard Ace addon state handlers
@@ -33,8 +33,8 @@ end
 -- ---------------------------------------------------------------------------------------
 -- Utility functions
 -- ---------------------------------------------------------------------------------------
-function Record(inout, context, msg)
-    print(inout..","..context..","..msg)
+function Record(inout, context, msg, itemCount)
+    print(inout..","..context..","..msg..","..itemCount)
 end
 
 function RememberItemLocation(bag, slot)
@@ -47,9 +47,19 @@ function RememberItemCount(bag, slot)
     rememberedCount = itemCount
 end
 
+function CountDifference(bag, slot)
+    _, itemCount, _, _, _, _, itemLink, _, _, _ = GetContainerItemInfo(rememberedBag, rememberedSlot)
+    return rememberedCount - itemCount
+end
+
+
 function Loot(text, playerName)
     local item = string.match(text, "%[(.-)%]")
-    Record("in", "loot", item)
+    local itemCount = string.match(text, "x[0-9]+")
+    if (itemCount == nil) then
+        itemCount = 1
+    end
+    Record("in", "loot", item, itemCount)
 end
 
 function RememberState(state, item)
@@ -78,7 +88,8 @@ local function eventHandler(self, event, ...)
         RememberItemCount(rememberedBag, rememberedSlot)
     elseif (event == "BAG_UPDATE") then
         if (extendedState == "destroying") then
-            Record("out", "destroy", rememberedName)
+            local diff = CountDifference(rememberedBag, rememberedSlot)
+            Record("out", "destroy", rememberedName, diff)
             RememberState("", "")
         end
     end
