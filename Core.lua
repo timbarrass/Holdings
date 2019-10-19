@@ -4,7 +4,7 @@ Holdings = LibStub("AceAddon-3.0"):NewAddon("Holdings", "AceConsole-3.0", "AceEv
 -- General variables and declarations
 -- ---------------------------------------------------------------------------------------
 local frame = CreateFrame("FRAME", "HoldingsAddonFrame");
-local rememberedBag, rememberedSlot, rememberedName, extendedState
+local rememberedBag, rememberedSlot, rememberedName, extendedState = ""
 
 local Loot, Record, RememberItemLocation, RememberItemCount, RememberState, CountDifference
 
@@ -22,6 +22,8 @@ function Holdings:OnEnable()
     frame:RegisterEvent("ITEM_LOCKED")
     frame:RegisterEvent("DELETE_ITEM_CONFIRM")
     frame:RegisterEvent("BAG_UPDATE")
+    frame:RegisterEvent("MERCHANT_SHOW")
+    frame:RegisterEvent("MERCHANT_CLOSED")
 
     print("Holdings enabled.")
 end
@@ -59,8 +61,12 @@ function Loot(text, playerName)
     if (itemCount == nil) then
         itemCount = 1
     end
+    local lootContext = "loot"
+    if (extendedState == "merchant") then
+        lootContext = "merchant"
+    end
     if (playerName == UnitName("player")) then
-        Record("in", "loot", item, itemCount)
+        Record("in", lootContext, item, itemCount)
     end
 end
 
@@ -94,6 +100,10 @@ local function eventHandler(self, event, ...)
             Record("out", "destroy", rememberedName, diff)
             RememberState("", "")
         end
+    elseif (event == "MERCHANT_SHOW") then
+        RememberState("merchant", "")
+    elseif (event == "MERCHANT_CLOSED") then
+        RememberState("", "")
     end
 
 end
