@@ -4,8 +4,9 @@ Holdings = LibStub("AceAddon-3.0"):NewAddon("Holdings", "AceConsole-3.0", "AceEv
 -- General variables and declarations
 -- ---------------------------------------------------------------------------------------
 local frame = CreateFrame("FRAME", "HoldingsAddonFrame");
+local rememberedBag, rememberedSlot, rememberedName, extendedState
 
-local Loot, Record
+local Loot, Record, RememberItemLocation, RememberItemCount, RememberState
 
 -- ---------------------------------------------------------------------------------------
 -- Standard Ace addon state handlers
@@ -18,6 +19,9 @@ function Holdings:OnEnable()
     -- Called when the addon is enabled
 
     frame:RegisterEvent("CHAT_MSG_LOOT")
+    frame:RegisterEvent("ITEM_LOCKED")
+    frame:RegisterEvent("DELETE_ITEM_CONFIRM")
+    frame:RegisterEvent("BAG_UPDATE")
 
     print("Holdings enabled.")
 end
@@ -33,9 +37,24 @@ function Record(inout, context, msg)
     print(inout..","..context..","..msg)
 end
 
+function RememberItemLocation(bag, slot)
+    rememberedBag = bag
+    rememberedSlot = slot
+end
+
+function RememberItemCount(bag, slot)
+    _, itemCount, _, _, _, _, itemLink, _, _, _ = GetContainerItemInfo(rememberedBag, rememberedSlot)
+    rememberedCount = itemCount
+end
+
 function Loot(text, playerName)
     local item = string.match(text, "%[(.-)%]")
     Record("in", "loot", item)
+end
+
+function RememberState(state, item)
+    extendedState = state
+    rememberedName = item
 end
 
 -- ---------------------------------------------------------------------------------------
@@ -50,6 +69,18 @@ local function eventHandler(self, event, ...)
     if (event == "CHAT_MSG_LOOT") then
         text, playerName, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ = ...
         Loot(text, playerName)
+    elseif (event == "ITEM_LOCKED") then
+        bag, slot = ...
+        RememberItemLocation(bag, slot)
+    elseif (event == "DELETE_ITEM_CONFIRM") then
+        itemName, _, _, _ = ...
+        RememberState("destroying", itemName)
+        RememberItemCount(rememberedBag, rememberedSlot)
+    elseif (event == "BAG_UPDATE") then
+        if (extendedState == "destroying") then
+            Record("out", "destroy", rememberedName)
+            RememberState("", "")
+        end
     end
 
 end
