@@ -55,7 +55,7 @@ end
 
 function Loot(text, playerName)
     local item = string.match(text, "%[(.-)%]")
-    local itemCount = string.match(text, "[0-9]+")
+    local itemCount = string.match(text, "[0-9]+$")
     if (itemCount == nil) then
         itemCount = 1
     end
@@ -79,7 +79,7 @@ local function eventHandler(self, event, ...)
     print("Rx: " .. event);
 
     if (event == "CHAT_MSG_LOOT") then
-        text, playerName, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _ = ...
+        text, _, _, _, playerName, _, _, _, _, _, _, _, _, _, _, _, _ = ...
         Loot(text, playerName)
     elseif (event == "ITEM_LOCKED") then
         bag, slot = ...
