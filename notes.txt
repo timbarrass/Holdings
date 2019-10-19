@@ -9,4 +9,17 @@ time.
 No debugging environment, no compiletime checks or real intellisense. Patchy crowdsourced
 documentation and /etrace.
 
-Lua. In Lua you have to define local functions before using them. OMG. Old school.
+Lua. In Lua you have to define local functions before using them. OMG. Old school. Otherwise
+its print("got here") debugging all the way, but these help:
+
+/console scriptErrors 1 to display LUA errors
+/console scriptErrors 0 to hide LUA errors
+
+!buggrabber and bugsack (former can be embedded into your own addon)
+advancedinterfaceoptions addon can show, hide errors apparently
+https://www.reddit.com/r/WowUI/comments/2lpmff/help_what_debugging_tools_are_available_to/
+
+extended workflows expressed in mutiple events:
+
+destruction:
+ITEM_LOCKED > [ITEM_UNLOCKED] > DESTROY_ITEM_CONFIRM > [ITEM_LOCKED] > [ITEM_UNLOCKED] > BAG_UPDATE
