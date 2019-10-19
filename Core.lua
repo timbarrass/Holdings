@@ -4,9 +4,10 @@ Holdings = LibStub("AceAddon-3.0"):NewAddon("Holdings", "AceConsole-3.0", "AceEv
 -- General variables and declarations
 -- ---------------------------------------------------------------------------------------
 local frame = CreateFrame("FRAME", "HoldingsAddonFrame");
-local rememberedBag, rememberedSlot, rememberedName, extendedState = ""
+local rememberedBag, rememberedSlot, rememberedName, rememberedGold, extendedState = ""
 
 local Loot, Record, RememberItemLocation, RememberItemCount, RememberState, CountDifference
+local RememberGold
 
 -- ---------------------------------------------------------------------------------------
 -- Standard Ace addon state handlers
@@ -24,6 +25,7 @@ function Holdings:OnEnable()
     frame:RegisterEvent("BAG_UPDATE")
     frame:RegisterEvent("MERCHANT_SHOW")
     frame:RegisterEvent("MERCHANT_CLOSED")
+    frame:RegisterEvent("PLAYER_MONEY")
 
     print("Holdings enabled.")
 end
@@ -75,6 +77,20 @@ function RememberState(state, item)
     rememberedName = item
 end
 
+function RememberGold()
+    rememberedGold = GetMoney()
+end
+
+function CalculateCost(gold)
+    local diff = gold - rememberedGold
+    local inout = "out"
+    if (diff > -1) then
+        inout = "in"
+    end
+    Record(inout, "cash", "", diff)
+    RememberGold()
+end
+
 -- ---------------------------------------------------------------------------------------
 -- WoW event handling -- basically the app body, define here as a backstop in case I've
 -- not declared one or more functions, variables. For each event parse args and call a
@@ -90,6 +106,7 @@ local function eventHandler(self, event, ...)
     elseif (event == "ITEM_LOCKED") then
         bag, slot = ...
         RememberItemLocation(bag, slot)
+        RememberGold()
     elseif (event == "DELETE_ITEM_CONFIRM") then
         itemName, _, _, _ = ...
         RememberState("destroying", itemName)
@@ -102,8 +119,13 @@ local function eventHandler(self, event, ...)
         end
     elseif (event == "MERCHANT_SHOW") then
         RememberState("merchant", "")
+        RememberGold()
     elseif (event == "MERCHANT_CLOSED") then
         RememberState("", "")
+    elseif (event == "PLAYER_MONEY") then
+        local currentGold = GetMoney()
+        print(currentGold.." "..rememberedGold)
+        CalculateCost(currentGold)
     end
 
 end
