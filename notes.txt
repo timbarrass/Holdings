@@ -9,3 +9,4 @@ time.
 No debugging environment, no compiletime checks or real intellisense. Patchy crowdsourced
 documentation and /etrace.
 
+Lua. In Lua you have to define local functions before using them. OMG. Old school.
