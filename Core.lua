@@ -7,7 +7,7 @@ local frame = CreateFrame("FRAME", "HoldingsAddonFrame");
 local rememberedBag, rememberedSlot, rememberedName, rememberedGold, extendedState = ""
 
 local Loot, Record, RememberItemLocation, RememberItemCount, RememberState, CountDifference
-local RememberGold
+local RememberGold, CalculateCost
 
 -- ---------------------------------------------------------------------------------------
 -- Standard Ace addon state handlers
@@ -26,6 +26,8 @@ function Holdings:OnEnable()
     frame:RegisterEvent("MERCHANT_SHOW")
     frame:RegisterEvent("MERCHANT_CLOSED")
     frame:RegisterEvent("PLAYER_MONEY")
+
+    RememberGold()
 
     print("Holdings enabled.")
 end
@@ -87,7 +89,11 @@ function CalculateCost(gold)
     if (diff > -1) then
         inout = "in"
     end
-    Record(inout, "cash", "", diff)
+    local costContext = "loot"
+    if (extendedState == "merchant") then
+        costContext = "merchant"
+    end
+    Record(inout, costContext, "", diff)
     RememberGold()
 end
 
@@ -124,7 +130,6 @@ local function eventHandler(self, event, ...)
         RememberState("", "")
     elseif (event == "PLAYER_MONEY") then
         local currentGold = GetMoney()
-        print(currentGold.." "..rememberedGold)
         CalculateCost(currentGold)
     end
 
