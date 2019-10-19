@@ -55,11 +55,13 @@ end
 
 function Loot(text, playerName)
     local item = string.match(text, "%[(.-)%]")
-    local itemCount = string.match(text, "x[0-9]+")
+    local itemCount = string.match(text, "[0-9]+")
     if (itemCount == nil) then
         itemCount = 1
     end
-    Record("in", "loot", item, itemCount)
+    if (playerName == UnitName("player")) then
+        Record("in", "loot", item, itemCount)
+    end
 end
 
 function RememberState(state, item)
