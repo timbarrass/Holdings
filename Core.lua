@@ -5,7 +5,7 @@ Holdings = LibStub("AceAddon-3.0"):NewAddon("Holdings", "AceConsole-3.0", "AceEv
 -- ---------------------------------------------------------------------------------------
 local frame = CreateFrame("FRAME", "HoldingsAddonFrame");
 local rememberedBag, rememberedSlot, rememberedName, rememberedGold, extendedState = ""
-local holdings = {}
+local currentHoldings = {}
 
 local Loot, Record, RememberItemLocation, RememberItemCount, RememberState, CountDifference
 local RememberGold, CalculateCost, Remove, PollHoldings, ShowHoldings
@@ -30,14 +30,25 @@ function Holdings:OnEnable()
     frame:RegisterEvent("MAIL_SHOW")
     frame:RegisterEvent("MAIL_CLOSED")
 
+    Holdings:RegisterChatCommand("holdings", "HoldingsCommand")
+
     RememberGold()
 
-    print("Holdings enabled.")
+    Holdings:Print("Holdings enabled.")
 end
 
 function Holdings:OnDisable()
     -- Called when the addon is disabled
 end
+
+-- ---------------------------------------------------------------------------------------
+-- Slash command handlers
+-- ---------------------------------------------------------------------------------------
+function Holdings:HoldingsCommand(params)
+    currentHoldings = PollHoldings()
+    ShowHoldings()
+end
+
 
 -- ---------------------------------------------------------------------------------------
 -- Utility functions
@@ -143,8 +154,8 @@ function PollHoldings()
 end
 
 function ShowHoldings()
-	for i in pairs(holdings) do
-		print("Holding: "..i.." "..holdings[i]);
+	for i in pairs(currentHoldings) do
+		print("Holding: "..i.." "..currentHoldings[i]);
 	end
 	print("Cash: "..GetMoney())
 end
