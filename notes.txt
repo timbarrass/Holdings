@@ -23,3 +23,14 @@ extended workflows expressed in mutiple events:
 
 destruction:
 ITEM_LOCKED > [ITEM_UNLOCKED] > DESTROY_ITEM_CONFIRM > [ITEM_LOCKED] > [ITEM_UNLOCKED] > BAG_UPDATE
+
+
+
+
+Security issues around realtime actions. Writing and reading to files from lua within WoW is locked
+out (lua 5+ enables lockout? get reference). Only write is to saved variables directory, access variables
+acedb or raw? Internal chatlogging doesn't flush until logout (https://www.wowinterface.com/forums/showthread.php?t=624)
+This is another fundamental problem, on top of the events not quite being keyed to chains of actions;
+actually that's not strictly fair, as the events are meant to be one-shots to enable UI lookup, they'reading
+not designed to be used to infer player actions post-hoc. (Could rebuild entire interface from ground up
+just to support accounting-style activities, and get access to player intent at source ...)
