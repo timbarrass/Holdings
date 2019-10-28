@@ -5,9 +5,10 @@ Holdings = LibStub("AceAddon-3.0"):NewAddon("Holdings", "AceConsole-3.0", "AceEv
 -- ---------------------------------------------------------------------------------------
 local frame = CreateFrame("FRAME", "HoldingsAddonFrame");
 local rememberedBag, rememberedSlot, rememberedName, rememberedGold, extendedState = ""
+local holdings = {}
 
 local Loot, Record, RememberItemLocation, RememberItemCount, RememberState, CountDifference
-local RememberGold, CalculateCost, Remove
+local RememberGold, CalculateCost, Remove, PollHoldings, ShowHoldings
 
 -- ---------------------------------------------------------------------------------------
 -- Standard Ace addon state handlers
@@ -118,6 +119,37 @@ function CalculateCost(gold)
     Record(inout, costContext, "", diff)
     RememberGold()
 end
+
+function PollHoldings()
+	local newHoldings = {}
+	for bag = 0,4,1
+	do
+		slots = GetContainerNumSlots(bag)
+		for slot = 1,slots,1
+		do
+			icon, itemCount, locked, quality, readable, lootable, itemLink, isFiltered, noValue, itemID = GetContainerItemInfo(bag,slot);
+			if (itemCount == nil) then
+			else
+				if (newHoldings[itemLink]) then
+					newHoldings[itemLink] = newHoldings[itemLink] + itemCount;
+				else
+					newHoldings[itemLink] = itemCount;
+				end
+			end
+		end
+	end
+
+	return newHoldings;
+end
+
+function ShowHoldings()
+	for i in pairs(holdings) do
+		print("Holding: "..i.." "..holdings[i]);
+	end
+	print("Cash: "..GetMoney())
+end
+
+
 
 -- ---------------------------------------------------------------------------------------
 -- WoW event handling -- basically the app body, define here as a backstop in case I've
