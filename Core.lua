@@ -7,7 +7,7 @@ local frame = CreateFrame("FRAME", "HoldingsAddonFrame");
 local rememberedBag, rememberedSlot, rememberedName, rememberedGold, extendedState = ""
 
 local Loot, Record, RememberItemLocation, RememberItemCount, RememberState, CountDifference
-local RememberGold, CalculateCost
+local RememberGold, CalculateCost, Remove
 
 -- ---------------------------------------------------------------------------------------
 -- Standard Ace addon state handlers
@@ -26,6 +26,8 @@ function Holdings:OnEnable()
     frame:RegisterEvent("MERCHANT_SHOW")
     frame:RegisterEvent("MERCHANT_CLOSED")
     frame:RegisterEvent("PLAYER_MONEY")
+    frame:RegisterEvent("MAIL_SHOW")
+    frame:RegisterEvent("MAIL_CLOSED")
 
     RememberGold()
 
@@ -46,6 +48,9 @@ end
 function RememberItemLocation(bag, slot)
     rememberedBag = bag
     rememberedSlot = slot
+    _, itemCount, _, _, _, _, itemLink, _, _, _ = GetContainerItemInfo(rememberedBag, rememberedSlot)
+    local itemName = string.match(itemLink, "%[(.-)%]")
+    rememberedName = itemName
 end
 
 function RememberItemCount(bag, slot)
@@ -55,9 +60,22 @@ end
 
 function CountDifference(bag, slot)
     _, itemCount, _, _, _, _, itemLink, _, _, _ = GetContainerItemInfo(rememberedBag, rememberedSlot)
-    return rememberedCount - itemCount
+    local diff = itemCount
+    if (rememberedCount ~= nil) then
+        diff = rememberedCount - itemCount
+    end
+    return diff
 end
 
+function Remove()
+    local diff = CountDifference(rememberedBag, rememberedSlot)
+    local removeContext = "destroy"
+    if (extendedState == "mail") then
+        removeContext = "mail"
+    end
+    Record("out", removeContext, rememberedName, diff)
+    RememberState("", "")
+end
 
 function Loot(text, playerName)
     local item = string.match(text, "%[(.-)%]")
@@ -68,6 +86,8 @@ function Loot(text, playerName)
     local lootContext = "loot"
     if (extendedState == "merchant") then
         lootContext = "merchant"
+    elseif (extendedState == "mail") then
+        lootContext = "mail"
     end
     if (playerName == UnitName("player")) then
         Record("in", lootContext, item, itemCount)
@@ -92,6 +112,8 @@ function CalculateCost(gold)
     local costContext = "loot"
     if (extendedState == "merchant") then
         costContext = "merchant"
+    elseif (extendedState == "mail") then
+        costContext = "mail"
     end
     Record(inout, costContext, "", diff)
     RememberGold()
@@ -118,11 +140,7 @@ local function eventHandler(self, event, ...)
         RememberState("destroying", itemName)
         RememberItemCount(rememberedBag, rememberedSlot)
     elseif (event == "BAG_UPDATE") then
-        if (extendedState == "destroying") then
-            local diff = CountDifference(rememberedBag, rememberedSlot)
-            Record("out", "destroy", rememberedName, diff)
-            RememberState("", "")
-        end
+        Remove()
     elseif (event == "MERCHANT_SHOW") then
         RememberState("merchant", "")
         RememberGold()
@@ -131,8 +149,19 @@ local function eventHandler(self, event, ...)
     elseif (event == "PLAYER_MONEY") then
         local currentGold = GetMoney()
         CalculateCost(currentGold)
+    elseif (event == "MAIL_SHOW") then
+        RememberState("mail")
+    elseif (event == "MAIL_CLOSED") then
+        RememberState("", "")
     end
 
 end
 
+local function onLoadHandler()
+    RememberGold()
+
+    print("Holdings loaded")
+end
+
+frame:SetScript("OnLoad", onLoadHandler)
 frame:SetScript("OnEvent", eventHandler);
