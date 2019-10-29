@@ -10,11 +10,18 @@ local currentHoldings = {}
 local Loot, Record, RememberItemLocation, RememberItemCount, RememberState, CountDifference
 local RememberGold, CalculateCost, Remove, PollHoldings, ShowHoldings
 
+local character = UnitName("player")
+
 -- ---------------------------------------------------------------------------------------
 -- Standard Ace addon state handlers
 -- ---------------------------------------------------------------------------------------
 function Holdings:OnInitialize()
     -- Called when the addon is loaded
+
+    self.db = LibStub("AceDB-3.0"):New("HoldingsDB")
+    Holdings:Print("DB init")
+
+    self.db.char.money = rememberedGold
 end
 
 function Holdings:OnEnable()
@@ -31,8 +38,9 @@ function Holdings:OnEnable()
     frame:RegisterEvent("MAIL_CLOSED")
 
     Holdings:RegisterChatCommand("holdings", "HoldingsCommand")
+    Holdings:RegisterChatCommand("rememberGold", "RememberGoldCommand")
 
-    RememberGold()
+    RememberGold(self)
 
     Holdings:Print("Holdings enabled.")
 end
@@ -47,6 +55,10 @@ end
 function Holdings:HoldingsCommand(params)
     currentHoldings = PollHoldings()
     ShowHoldings()
+end
+
+function Holdings:RememberGoldCommand(params)
+    RememberGold(self)
 end
 
 
@@ -111,11 +123,15 @@ function RememberState(state, item)
     rememberedName = item
 end
 
-function RememberGold()
+function RememberGold(self)
     rememberedGold = GetMoney()
+
+    self.db.char.money = rememberedGold
+
+    Holdings:Print(self.db.char.money)
 end
 
-function CalculateCost(gold)
+function CalculateCost(self, gold)
     local diff = gold - rememberedGold
     local inout = "out"
     if (diff > -1) then
@@ -128,7 +144,7 @@ function CalculateCost(gold)
         costContext = "mail"
     end
     Record(inout, costContext, "", diff)
-    RememberGold()
+    RememberGold(self)
 end
 
 function PollHoldings()
@@ -177,7 +193,7 @@ local function eventHandler(self, event, ...)
     elseif (event == "ITEM_LOCKED") then
         bag, slot = ...
         RememberItemLocation(bag, slot)
-        RememberGold()
+        RememberGold(self)
     elseif (event == "DELETE_ITEM_CONFIRM") then
         itemName, _, _, _ = ...
         RememberState("destroying", itemName)
@@ -186,7 +202,7 @@ local function eventHandler(self, event, ...)
         Remove()
     elseif (event == "MERCHANT_SHOW") then
         RememberState("merchant", "")
-        RememberGold()
+        RememberGold(self)
     elseif (event == "MERCHANT_CLOSED") then
         RememberState("", "")
     elseif (event == "PLAYER_MONEY") then
@@ -201,8 +217,6 @@ local function eventHandler(self, event, ...)
 end
 
 local function onLoadHandler()
-    RememberGold()
-
     print("Holdings loaded")
 end
 
