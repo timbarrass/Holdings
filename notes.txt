@@ -25,6 +25,11 @@ destruction:
 ITEM_LOCKED > [ITEM_UNLOCKED] > DESTROY_ITEM_CONFIRM > [ITEM_LOCKED] > [ITEM_UNLOCKED] > BAG_UPDATE
 
 
+self! There's an interesting thing. It's available as a global -- if you're in a method prefixed
+with Holdings:XXX, in whcih case it's passed in as a hidden/implicit parameter. Otherwise, it needs
+be explicitly added as a method param (assuming with a call chain rooted in something prefixed with
+Holdings:XXX ...): https://stackoverflow.com/a/45114635/389828
+
 
 
 Security issues around realtime actions. Writing and reading to files from lua within WoW is locked
