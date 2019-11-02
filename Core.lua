@@ -4,11 +4,15 @@ Holdings = LibStub("AceAddon-3.0"):NewAddon("Holdings", "AceConsole-3.0", "AceEv
 -- General variables and declarations
 -- ---------------------------------------------------------------------------------------
 local frame = CreateFrame("FRAME", "HoldingsAddonFrame");
-local rememberedBag, rememberedSlot, rememberedName, rememberedGold, extendedState = ""
-local currentHoldings = {}
+local rememberedName, rememberedGold, db
+local rememberedBag = 0
+local rememberedSlot = 0
+local lootIndex = 0
+local extendedState = ""
+local acurrentHoldings = {}
 
 local Loot, Record, RememberItemLocation, RememberItemCount, RememberState, CountDifference
-local RememberGold, CalculateCost, Remove, PollHoldings, ShowHoldings
+local RememberGold, CalculateCost, Remove, PollHoldings, ShowHoldings, Timestamp
 
 local character = UnitName("player")
 
@@ -19,9 +23,14 @@ function Holdings:OnInitialize()
     -- Called when the addon is loaded
 
     self.db = LibStub("AceDB-3.0"):New("HoldingsDB")
-    Holdings:Print("DB init")
 
-    self.db.char.money = rememberedGold
+    db = self.db
+
+    if (db.char.money == nil)        then db.char.money = {} end
+    if (db.char.transactions == nil) then db.char.transactions = {} end
+    table.insert(db.char.money, rememberedGold)
+
+    Holdings:Print("DB init")
 end
 
 function Holdings:OnEnable()
@@ -65,8 +74,14 @@ end
 -- ---------------------------------------------------------------------------------------
 -- Utility functions
 -- ---------------------------------------------------------------------------------------
+function Timestamp()
+    return time()
+end
+
 function Record(inout, context, msg, itemCount)
-    print(inout..","..context..","..msg..","..itemCount)
+    if (msg == nil) then msg = "" end
+    table.insert(db.char.transactions, Timestamp()..","..inout..","..context..","..msg..","..itemCount)
+    Holdings:Print(Timestamp()..","..inout..","..context..","..msg..","..itemCount)
 end
 
 function RememberItemLocation(bag, slot)
@@ -126,9 +141,9 @@ end
 function RememberGold(self)
     rememberedGold = GetMoney()
 
-    self.db.char.money = rememberedGold
+    table.insert(db.char.money, Timestamp() .. "," .. rememberedGold)
 
-    Holdings:Print(self.db.char.money)
+    Holdings:Print(db.char.money[table.maxn(db.char.money)])
 end
 
 function CalculateCost(self, gold)
@@ -185,7 +200,7 @@ end
 -- ---------------------------------------------------------------------------------------
 local function eventHandler(self, event, ...)
     
-    print("Rx: " .. event);
+    --print("Rx: " .. event);
 
     if (event == "CHAT_MSG_LOOT") then
         text, _, _, _, playerName, _, _, _, _, _, _, _, _, _, _, _, _ = ...
@@ -207,7 +222,7 @@ local function eventHandler(self, event, ...)
         RememberState("", "")
     elseif (event == "PLAYER_MONEY") then
         local currentGold = GetMoney()
-        CalculateCost(currentGold)
+        CalculateCost(self, currentGold)
     elseif (event == "MAIL_SHOW") then
         RememberState("mail")
     elseif (event == "MAIL_CLOSED") then
