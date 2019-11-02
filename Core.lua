@@ -107,13 +107,15 @@ function CountDifference(bag, slot)
 end
 
 function Remove()
-    local diff = CountDifference(rememberedBag, rememberedSlot)
-    local removeContext = "destroy"
-    if (extendedState == "mail") then
-        removeContext = "mail"
+    if (extendedState ~= "") then
+        local diff = CountDifference(rememberedBag, rememberedSlot)
+        local removeContext = "destroy"
+        if (extendedState == "mail") then
+            removeContext = "mail"
+        end
+        Record("out", removeContext, rememberedName, diff)
+        RememberState("", "")
     end
-    Record("out", removeContext, rememberedName, diff)
-    RememberState("", "")
 end
 
 function Loot(text, playerName)
