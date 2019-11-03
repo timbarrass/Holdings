@@ -45,6 +45,7 @@ function Holdings:OnEnable()
     frame:RegisterEvent("PLAYER_MONEY")
     frame:RegisterEvent("MAIL_SHOW")
     frame:RegisterEvent("MAIL_CLOSED")
+    frame:RegisterEvent("TAXIMAP_OPENED")
 
     Holdings:RegisterChatCommand("holdings", "HoldingsCommand")
     Holdings:RegisterChatCommand("rememberGold", "RememberGoldCommand")
@@ -159,6 +160,9 @@ function CalculateCost(self, gold)
         costContext = "merchant"
     elseif (extendedState == "mail") then
         costContext = "mail"
+    elseif (extendedState == "taxi") then
+        costContext = "taxi"
+        RememberState("", "") -- do this here, as taximap closes before money event
     end
     Record(inout, costContext, "", diff)
     RememberGold(self)
@@ -202,7 +206,7 @@ end
 -- ---------------------------------------------------------------------------------------
 local function eventHandler(self, event, ...)
     
-    --print("Rx: " .. event);
+    print("Rx: " .. event);
 
     if (event == "CHAT_MSG_LOOT") then
         text, _, _, _, playerName, _, _, _, _, _, _, _, _, _, _, _, _ = ...
@@ -229,6 +233,8 @@ local function eventHandler(self, event, ...)
         RememberState("mail")
     elseif (event == "MAIL_CLOSED") then
         RememberState("", "")
+    elseif (event == "TAXIMAP_OPENED") then
+        RememberState("taxi")
     end
 
 end
